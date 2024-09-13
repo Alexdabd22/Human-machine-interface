@@ -1,0 +1,102 @@
+﻿<Window x:Class="TextEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TextEditor"
+        xmlns:ribbon="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ribbon:Ribbon Grid.Row="0" Margin="1,1,1,1">
+            <!-- Стрічка допомоги -->
+            <ribbon:Ribbon.HelpPaneContent>
+                <ribbon:RibbonButton SmallImageSource="image/icon-home.png" KeyTip="F"/>
+            </ribbon:Ribbon.HelpPaneContent>
+
+            <!-- Головне меню -->
+            <ribbon:Ribbon.ApplicationMenu>
+                <ribbon:RibbonApplicationMenu SmallImageSource="image/icon-home.png">
+                    <ribbon:RibbonApplicationMenuItem Header="Create" ImageSource="image/Document.png" KeyTip="N" Click="btnCreate_Click"/>
+                    <ribbon:RibbonApplicationMenuItem Header="Open" ImageSource="image/OpenFolder.png" KeyTip="O" Click="btnOpen_Click"/>
+                    <ribbon:RibbonApplicationMenuItem Header="Print" ImageSource="image/PrintDialog.png" KeyTip="P" Click="btnPrint_Click"/>
+                    <ribbon:RibbonApplicationMenuItem Header="Properties" ImageSource="image/Property.png"/>
+                    <ribbon:RibbonApplicationMenuItem Header="Close" ImageSource="image/CloseDocument.png" KeyTip="C" Click="btnClose_Click"/>
+                </ribbon:RibbonApplicationMenu>
+            </ribbon:Ribbon.ApplicationMenu>
+            <Ribbon.QuickAccessToolBar>
+                <RibbonQuickAccessToolBar Margin="0,0,0,-1" Width="104">
+                    <RibbonButton SmallImageSource="image\SaveAll.png" />
+                    <RibbonSplitButton x:Name="Undo" SmallImageSource="image\Undo.png" >
+                        <RibbonSplitMenuItem Header="Undo1"></RibbonSplitMenuItem>
+                    </RibbonSplitButton>
+                    <RibbonSplitButton x:Name="Redo" SmallImageSource="image\Redo.png" >
+                        <RibbonSplitMenuItem Header="Redo1"></RibbonSplitMenuItem>
+                    </RibbonSplitButton>
+                </RibbonQuickAccessToolBar>
+            </Ribbon.QuickAccessToolBar>
+            <RibbonTab Header="Home">
+                <!-- Home/Clipboard group-->
+                <RibbonGroup Header="Clipboard">
+                    <RibbonMenuButton LargeImageSource="Home image\paste.png" Label="Paste" KeyTip="V" >
+                        <RibbonMenuItem ImageSource="Home image\Paste.png" Header="Keep Text Only" KeyTip="T" />
+                        <RibbonMenuItem ImageSource="Home image\Paste.png" Header="Paste Special"
+KeyTip="S"/>
+                    </RibbonMenuButton>
+                    <RibbonButton SmallImageSource="Home image\Cut.png" Label="Cut" KeyTip="X" />
+                    <RibbonButton SmallImageSource="Home image\Copy.png" Label="Copy" KeyTip="C" />
+                </RibbonGroup>
+
+                <!-- Home/Colors group-->
+                <RibbonGroup x:Name="fonts" Header="Fonts" Width="Auto" >
+                    <RibbonControlGroup>
+                        <ComboBox ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
+Text="Select Font..." IsEditable="True"/>
+                        <ComboBox x:Name="_fontSize" Text="Size..." IsEditable="True"></ComboBox>
+                    </RibbonControlGroup>
+                    <RibbonControlGroup>
+                        <RibbonButton SmallImageSource="Home image\Button B.png" KeyTip="B" />
+                        <RibbonButton SmallImageSource="Home image\Button I.png" KeyTip="I" />
+                        <RibbonButton SmallImageSource="Home image\Button U.png" KeyTip="U" />
+                        <RibbonButton SmallImageSource="Home image\Button A.png" KeyTip="A"/>
+                    </RibbonControlGroup>
+                </RibbonGroup>
+                <RibbonGroup x:Name="paragraph" Header="Paragraph">
+                    <RibbonControlGroup>
+                        <RibbonButton SmallImageSource="Home image\AlignLeft.png" />
+                        <RibbonButton SmallImageSource="Home image\AlignRight.png" />
+                        <RibbonButton SmallImageSource="Home image\AlignBoth.png" />
+                    </RibbonControlGroup>
+
+                    <RibbonControlGroup>
+                        <RibbonButton SmallImageSource="Home image\BulletList.png"/>
+                    </RibbonControlGroup>
+                </RibbonGroup>
+
+            </RibbonTab>            <RibbonTab Header="Insert" Margin="-8,0,8,0" UseLayoutRounding="True"
+ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <RibbonGroup x:Name="objects" Header="Objects">
+                    <RibbonButton LargeImageSource="Insert image\Table.png" Label="Table"/>
+                    <RibbonButton SmallImageSource="Insert image\ApplicationAccess.png"/>
+                    <RibbonButton SmallImageSource="Insert image\Rectangle.png"/>
+                    <RibbonButton SmallImageSource="Insert image\LineChart.png"/>
+                    <RibbonButton SmallImageSource="Insert image\Image.png"/>
+                </RibbonGroup>
+            </RibbonTab>
+        </ribbon:Ribbon>
+        <RichTextBox Grid.Row="1">
+            <FlowDocument>
+                <Paragraph>
+                    <RichTextBox x:Name="doc1" Grid.Row="1">
+                    </RichTextBox>
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
+
+    </Grid>
+</Window>
