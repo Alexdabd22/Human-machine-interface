@@ -6,22 +6,8 @@
         xmlns:local="clr-namespace:TextEditor"
         xmlns:ribbon="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Window.Resources>
-        <!-- Стиль для вкладок з кнопкою закриття -->
-        <Style TargetType="TabItem">
-            <Setter Property="HeaderTemplate">
-                <Setter.Value>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Header}" Margin="0,0,5,0"/>
-                            <Button Content="×" Width="20" Height="20" Command="{Binding RelativeSource={RelativeSource AncestorType=TabControl}, Path=DataContext.CloseTabCommand}" CommandParameter="{Binding}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
+        Title="textEditor" Height="450" Width="800"
+        Icon="Insert image/Image.png">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -30,15 +16,12 @@
         </Grid.RowDefinitions>
 
         <ribbon:Ribbon Grid.Row="0" Margin="1,1,1,1">
-            <!-- Стрічка допомоги -->
             <ribbon:Ribbon.HelpPaneContent>
                 <ribbon:RibbonButton SmallImageSource="image/icon-home.png" KeyTip="F"/>
             </ribbon:Ribbon.HelpPaneContent>
 
-            <!-- Головне меню -->
             <ribbon:Ribbon.ApplicationMenu>
                 <ribbon:RibbonApplicationMenu SmallImageSource="image/icon-home.png">
-                    <ribbon:RibbonApplicationMenuItem Header="Create" ImageSource="image/Document.png" KeyTip="N" Click="btnCreate_Click"/>
                     <ribbon:RibbonApplicationMenuItem Header="Open" ImageSource="image/OpenFolder.png" KeyTip="O" Click="btnOpen_Click"/>
                     <ribbon:RibbonApplicationMenuItem Header="Print" ImageSource="image/PrintDialog.png" KeyTip="P" Click="btnPrint_Click"/>
                     <ribbon:RibbonApplicationMenuItem Header="Properties" ImageSource="image/Property.png"/>
@@ -66,7 +49,7 @@
                         <RibbonMenuItem ImageSource="Home image\Paste.png" Header="Paste Special" KeyTip="S" Command="{x:Static ApplicationCommands.Paste}" CommandTarget="{Binding ElementName=_richTextBox}" />
                     </RibbonMenuButton>
                     <RibbonButton SmallImageSource="Home image\Cut.png" Label="Cut" KeyTip="X" Command="{x:Static ApplicationCommands.Cut}" CommandTarget="{Binding ElementName=_richTextBox}" />
-                    <RibbonButton SmallImageSource="Home image\Copy.png" Label="Copy" KeyTip="C" Command="{x:Static ApplicationCommands.Copy}" CommandTarget="{Binding ElementName=_richTextBox}" />
+                    <RibbonButton SmallImageSource="Home image\Copy.png" Label="Copy" KeyTip="C" CommandTarget="{Binding ElementName=_richTextBox}" />
                 </RibbonGroup>
 
                 <!-- Home/Fonts group-->
@@ -92,31 +75,18 @@
                     <RibbonControlGroup>
                         <RibbonButton SmallImageSource="Home image\AlignLeft.png" Command="{x:Static EditingCommands.AlignLeft}" CommandTarget="{Binding ElementName=_richTextBox}" />
                         <RibbonButton SmallImageSource="Home image\AlignRight.png" Command="{x:Static EditingCommands.AlignRight}" CommandTarget="{Binding ElementName=_richTextBox}" />
-                        <RibbonButton SmallImageSource="Home image\AlignBoth.png" Command="{x:Static EditingCommands.AlignJustify}" CommandTarget="{Binding ElementName=_richTextBox}" />
+                        <RibbonButton SmallImageSource="Home image\AlignBoth.png" Click="CenterText_Click" />
                     </RibbonControlGroup>
-                    <RibbonControlGroup>
-                        <RibbonButton SmallImageSource="Home image\BulletList.png"/>
-                    </RibbonControlGroup>
-                </RibbonGroup>
-            </RibbonTab>
 
-            <RibbonTab Header="Insert" Margin="-8,0,8,0" UseLayoutRounding="True" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                <RibbonGroup x:Name="objects" Header="Objects">
-                    <RibbonButton LargeImageSource="Insert image\Table.png" Label="Table"/>
-                    <RibbonButton SmallImageSource="Insert image\ApplicationAccess.png"/>
-                    <RibbonButton SmallImageSource="Insert image\Rectangle.png"/>
-                    <RibbonButton SmallImageSource="Insert image\LineChart.png"/>
-                    <RibbonButton SmallImageSource="Insert image\Image.png"/>
+                    <!-- Додаємо поле для введення числа відступу -->
+                    <RibbonControlGroup>
+                        <TextBox x:Name="IndentValue" Width="50" Text="20" />
+                        <RibbonButton SmallImageSource="Home image\BulletList.png" Label="Відступ праворуч" Click="SetRightIndent_Click"/>
+                    </RibbonControlGroup>
                 </RibbonGroup>
             </RibbonTab>
         </ribbon:Ribbon>
 
-        <TabControl x:Name="tabControl" Grid.Row="1" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
-            <TabControl.ContentTemplate>
-                <DataTemplate>
-                    <RichTextBox x:Name="_richTextBox"/>
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
+        <RichTextBox x:Name="_richTextBox" Grid.Row="1"/>
     </Grid>
 </Window>

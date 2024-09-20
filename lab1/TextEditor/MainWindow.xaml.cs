@@ -2,223 +2,209 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Ribbon;
 using System.Windows.Documents;
-using System.Windows.Media;
-using System.Windows.Forms;
-using System.Collections.ObjectModel;
 using System.Windows.Input;
-
-using RichTextBox = System.Windows.Controls.RichTextBox;
-using DataFormats = System.Windows.DataFormats;
-using ComboBox = System.Windows.Controls.ComboBox;
+using Microsoft.Win32;
+using System.Windows.Media;
+using Forms = System.Windows.Forms;  
 
 namespace TextEditor
 {
     public partial class MainWindow : Window
     {
-        public ObservableCollection<TabItem> Tabs { get; set; }
-        public TabItem SelectedTab { get; set; }
-
-        private bool IsSaved { get; set; } = true;
-
-        private RichTextBox CurrentRichTextBox
-        {
-            get
-            {
-                if (tabControl.SelectedItem is TabItem tabItem)
-                {
-                    return tabItem.Content as RichTextBox;
-                }
-                return null;
-            }
-        }
-
+        // Колекція для вибору розміру шрифту
         public double[] FontSizes
         {
             get
             {
-                return new double[] { 3.0, 4.0, 5.0, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0,
-                 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 15.0, 16.0, 17.0, 18.0,
-                 19.0, 20.0, 22.0, 24.0, 26.0, 28.0, 30.0, 32.0, 34.0, 36.0, 38.0, 40.0, 44.0,
-                 48.0, 52.0, 56.0, 60.0, 64.0, 68.0, 72.0, 76.0, 80.0, 88.0, 96.0, 104.0, 112.0,
-                 120.0, 128.0, 136.0, 144.0 };
+                return new double[] { 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 48, 60, 72 };
             }
         }
 
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = this;
+            _fontSize.ItemsSource = FontSizes;
+            AddHeadersAndFooters();
 
-            Tabs = new ObservableCollection<TabItem>();
-            AddNewTab("New Document");
-        }
+            // новий абзац після колонтитула
+            Paragraph newParagraph = new Paragraph();
+            _richTextBox.Document.Blocks.Add(newParagraph); 
 
-        private void AddNewTab(string header)
-        {
-            var newRichTextBox = new RichTextBox
+          
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                Document = new FlowDocument(new Paragraph(new Run("")))
-            };
-
-            var newTab = new TabItem
-            {
-                Header = header,
-                Content = newRichTextBox
-            };
-
-            Tabs.Add(newTab);
-            SelectedTab = newTab;
-
-            newRichTextBox.Document = new FlowDocument(new Paragraph(new Run("")));
-        }
-        private void UpdateRichTextBoxDocument(RichTextBox richTextBox, FlowDocument document)
-        {
-            richTextBox.Document = document;
+                _richTextBox.Focus(); 
+                _richTextBox.CaretPosition = newParagraph.ContentStart; 
+            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
 
-        public ICommand CloseTabCommand => new RelayCommand<TabItem>(CloseTab);
-
-        private void CloseTab(TabItem tab)
-        {
-            if (Tabs.Contains(tab))
-            {
-                Tabs.Remove(tab);
-            }
-        }
-
-        public class RelayCommand<T> : ICommand
-        {
-            private readonly Action<T> _execute;
-            public RelayCommand(Action<T> execute) => _execute = execute;
-
-            public bool CanExecute(object parameter) => true;
-            public void Execute(object parameter) => _execute((T)parameter);
-
-            public event EventHandler CanExecuteChanged;
-        }
-
-        private void btnCreate_Click(object sender, RoutedEventArgs e)
-        {
-            AddNewTab("New Document");
-        }
-
+        // Відкриття файлу
         private void btnOpen_Click(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-            dlg.Filter = "Document files (*.rtf)|*.rtf";
-            var result = dlg.ShowDialog();
-            if (result == true && CurrentRichTextBox != null)
+            var dlg = new Microsoft.Win32.OpenFileDialog  
             {
-                TextRange t = new TextRange(CurrentRichTextBox.Document.ContentStart, CurrentRichTextBox.Document.ContentEnd);
+                Filter = "Document files (*.rtf)|*.rtf"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                TextRange textRange = new TextRange(_richTextBox.Document.ContentStart, _richTextBox.Document.ContentEnd);
                 using (FileStream file = new FileStream(dlg.FileName, FileMode.Open))
                 {
-                    t.Load(file, DataFormats.Rtf);
-                }
-                IsSaved = true;
-            }
-        }
-
-        private void btnPrint_Click(object sender, RoutedEventArgs e)
-        {
-            System.Windows.Controls.PrintDialog printDialog = new System.Windows.Controls.PrintDialog();
-            if (printDialog.ShowDialog() == true)
-            {
-                RichTextBox currentRichTextBox = GetSelectedRichTextBox();
-                if (currentRichTextBox != null)
-                {
-                    printDialog.PrintVisual(currentRichTextBox, "Printing Document");
+                    textRange.Load(file, DataFormats.Rtf);  
                 }
             }
         }
 
-        private RichTextBox GetSelectedRichTextBox()
-        {
-            if (tabControl.SelectedItem is TabItem selectedTab && selectedTab.Content is RichTextBox richTextBox)
-            {
-                return richTextBox;
-            }
-            return null;
-        }
-
-        private void btnClose_Click(object sender, RoutedEventArgs e)
-        {
-            if (!IsSaved)
-            {
-                var result = System.Windows.MessageBox.Show("Do you want to save changes?", "Message", MessageBoxButton.YesNoCancel);
-                if (result == MessageBoxResult.Yes)
-                {
-                    // Save changes
-                    SaveCurrentDocument();
-                }
-                else if (result == MessageBoxResult.Cancel)
-                {
-                    // Cancel closing
-                    return;
-                }
-            }
-
-            // Close the application or document
-            this.Close();
-        }
-
+        // Збереження файлу
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            SaveCurrentDocument();
-        }
-
-        private void SelectTextColor_Click(object sender, RoutedEventArgs e)
-        {
-            ColorDialog colorDialog = new ColorDialog();
-            if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            var dlg = new Microsoft.Win32.SaveFileDialog  
             {
-                SolidColorBrush brush = new SolidColorBrush(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
-                if (CurrentRichTextBox != null)
-                {
-                    TextSelection selection = CurrentRichTextBox.Selection;
-                    if (selection != null && !selection.IsEmpty)
-                    {
-                        selection.ApplyPropertyValue(TextElement.ForegroundProperty, brush);
-                    }
-                }
-            }
-        }
-
-        private void SaveCurrentDocument()
-        {
-            RichTextBox richTextBox = CurrentRichTextBox;
-            if (richTextBox == null)
-                return;
-
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.Filter = "RTF Files (*.rtf)|*.rtf|All Files (*.*)|*.*";
-            bool? result = dlg.ShowDialog();
-            if (result == true)
+                Filter = "RTF Files (*.rtf)|*.rtf|All Files (*.*)|*.*"
+            };
+            if (dlg.ShowDialog() == true)
             {
                 using (FileStream fs = new FileStream(dlg.FileName, FileMode.Create))
                 {
-                    TextRange textRange = new TextRange(richTextBox.Document.ContentStart, richTextBox.Document.ContentEnd);
-                    textRange.Save(fs, DataFormats.Rtf);
+                    TextRange textRange = new TextRange(_richTextBox.Document.ContentStart, _richTextBox.Document.ContentEnd);
+                    textRange.Save(fs, DataFormats.Rtf);  
                 }
-                IsSaved = true;
+            }
+        }
+
+        // Зміна кольору тексту
+        private void SelectTextColor_Click(object sender, RoutedEventArgs e)
+        {
+            var colorDialog = new Forms.ColorDialog(); 
+            if (colorDialog.ShowDialog() == Forms.DialogResult.OK)
+            {
+                var brush = new SolidColorBrush(Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B));
+                var selection = _richTextBox.Selection;
+                if (selection != null && !selection.IsEmpty)
+                {
+                    selection.ApplyPropertyValue(TextElement.ForegroundProperty, brush);
+                }
+            }
+        }
+
+        // Друк документу
+        private void btnPrint_Click(object sender, RoutedEventArgs e)
+        {
+            var printDialog = new System.Windows.Controls.PrintDialog();
+            if (printDialog.ShowDialog() == true)
+            {
+                printDialog.PrintVisual(_richTextBox, "Printing Document");
             }
         }
 
         private void FontFamili_SelectionChange(object sender, SelectionChangedEventArgs e)
         {
-            if (CurrentRichTextBox != null)
+            if (_richTextBox != null && ((System.Windows.Controls.ComboBox)sender).SelectedItem != null)
             {
-                CurrentRichTextBox.Selection.ApplyPropertyValue(Inline.FontFamilyProperty, ((ComboBox)sender).SelectedItem);
+                _richTextBox.Selection.ApplyPropertyValue(Inline.FontFamilyProperty, ((System.Windows.Controls.ComboBox)sender).SelectedItem);
             }
         }
 
         private void FontSize_SelectionChange(object sender, SelectionChangedEventArgs e)
         {
-            if (CurrentRichTextBox != null)
+            if (_richTextBox != null && ((System.Windows.Controls.ComboBox)sender).SelectedItem != null)
             {
-                CurrentRichTextBox.Selection.ApplyPropertyValue(Inline.FontSizeProperty, ((ComboBox)sender).SelectedItem);
+                _richTextBox.Selection.ApplyPropertyValue(Inline.FontSizeProperty, ((System.Windows.Controls.ComboBox)sender).SelectedItem);
             }
         }
+
+        private void btnClose_Click(object sender, RoutedEventArgs e)
+        {
+            if (_richTextBox != null && !_richTextBox.Document.ContentStart.GetTextInRun(LogicalDirection.Forward).Trim().Equals(""))
+            {
+                var result = System.Windows.MessageBox.Show("Do you want to save changes before closing?", "Confirmation", MessageBoxButton.YesNoCancel);  
+                if (result == MessageBoxResult.Yes)
+                {
+                    btnSave_Click(sender, e);
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
+            }
+
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        private void CenterText_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_richTextBox.Selection.IsEmpty)
+            {
+                var paragraph = _richTextBox.Selection.Start.Paragraph;
+                if (paragraph != null)
+                {
+                    paragraph.TextAlignment = TextAlignment.Center;  // Вирівнюємо текст по центру
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select some text to center.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        // Додавання колонтитулів
+        private void AddHeadersAndFooters()
+        {
+            FlowDocument doc = _richTextBox.Document;
+
+            // Створення верхнього колонтитулу
+            Paragraph header = new Paragraph(new Run("Заголовок документа"));
+            header.TextAlignment = TextAlignment.Center;
+            header.FontSize = 14;
+            header.FontWeight = FontWeights.Bold;
+
+            // Створення нижнього колонтитулу
+            Paragraph footer = new Paragraph(new Run("Сторінка 1"));
+            footer.TextAlignment = TextAlignment.Right;
+            footer.FontSize = 12;
+            footer.FontStyle = FontStyles.Italic;
+
+
+            doc.Blocks.InsertBefore(doc.Blocks.FirstBlock, header);  
+            doc.Blocks.Add(footer);  
+        }
+
+
+        private void SetRightIndent_Click(object sender, RoutedEventArgs e)
+        {
+            if (_richTextBox.Selection != null && !_richTextBox.Selection.IsEmpty)
+            {
+            
+                if (int.TryParse(IndentValue.Text, out int indentValue))
+                {
+                    if (indentValue < 1 || indentValue > 50)
+                    {
+                        MessageBox.Show("Будь ласка, введіть значення відступу між 1 і 50.", "Неправильне значення", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+             
+                    TextRange selectedTextRange = new TextRange(_richTextBox.Selection.Start, _richTextBox.Selection.End);
+
+               
+                    Paragraph paragraph = selectedTextRange.Start.Paragraph;
+                    if (paragraph != null)
+                    {
+                        paragraph.TextAlignment = TextAlignment.Right;
+                        paragraph.Margin = new Thickness(0, 0, indentValue, 0);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Будь ласка, введіть коректне числове значення для відступу.", "Невірний ввід", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Виберіть текст, щоб встановити відступ праворуч.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
     }
 }
